@@ -1,6 +1,7 @@
-const verifyRole = ([...allowedRoles]) => {
+ const verifyRole = ([...allowedRoles]) => {
   return (req, res, next) => {
-    // console.log("role...",req.user.userrole)
+    console.log("role...",req.user)
+
     if (!allowedRoles.includes(req.user.userrole)) {
       return res.status(403).json({
         message: "Access Denied",
@@ -10,4 +11,4 @@ const verifyRole = ([...allowedRoles]) => {
   };
 };
 
-module.exports = { verifyRole };
+module.exports={verifyRole}

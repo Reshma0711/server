@@ -1,7 +1,7 @@
 const { admin,manager,user} = require("../controllers/role")
 const express=require("express")
 const router=express.Router()
-const { verifyToken } = require("../middlewares/authmiddleware")
+const {verifyToken }= require("../middlewares/authmiddleware")
 const {verifyRole}=require("../middlewares/rolemiddleware")
 
 

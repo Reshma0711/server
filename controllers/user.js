@@ -36,7 +36,7 @@ const secretKey = process.env.JWT_SECRET_KEY;
 
 exports.logIn = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password, role} = req.body;
 
     const user = await User.findOne({ email });
     if (!user)
@@ -47,7 +47,7 @@ exports.logIn = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
 
     const token = jwt.sign(
-      { useremail: user.email, userrole: user.role },
+      { id:user.id,useremail: user.email, userrole: user.role },
       secretKey,
       { expiresIn: "1h" }
     );
@@ -68,3 +68,6 @@ exports.accessPage = async (req, res) => {
 // }
 
 // module.exports = { signUp, accessPage };
+
+
+

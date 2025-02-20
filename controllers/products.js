@@ -22,7 +22,7 @@ const productPagination = async (req, res) => {
       product: products,
       totalProducts,
       currentPage: req.pagination.page,
-      totalPages: Math.ceil(totalProducts / limit)
+      totalPages: Math.ceil(totalProducts / limit),
     });
   } catch (err) {
     return res.status(500).send({
@@ -33,7 +33,7 @@ const productPagination = async (req, res) => {
 
 const addProduct = async (req, res) => {
   try {
-    const { name, price, description, category, stock } = req.body;
+    const { id, name, price, description, category, stock, image } = req.body;
 
     if (!name || !price || !description || !category) {
       return res
@@ -49,22 +49,23 @@ const addProduct = async (req, res) => {
     }
 
     const newProduct = new Product({
+      id,
       name,
       price,
       description,
       category,
       stock: stock || 0,
       image,
-
     });
 
     await newProduct.save();
+    console.log(newProduct);
     return res
       .status(201)
       .json({ message: "Product added successfully!", product: newProduct });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server Error" });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -82,25 +83,70 @@ const getProducts = async (req, res) => {
 // This function will update all products in the database
 const updateProducts = async (req, res) => {
   try {
-    // Use updateMany() to update all products
-    const result = await Product.updateMany(
-      {}, // The empty object {} means "apply to all products"
-      { $set: { image: "", rating: null } } // Set default values for new fields: image and rating
-    );
+    // Use updateMany to remove the 'id' field from all products
+    const result = await Product.updateMany({}, { $unset: { quantity:0 } });
 
-    // Log the result to the console (show how many products were updated)
-    console.log(result);
     console.log(`Updated ${result.modifiedCount} products.`);
     return res.status(200).json({
       message: `${result.modifiedCount} products updated successfully.`,
     });
   } catch (error) {
-    // If an error occurs, log it to the console
     return res.status(400).json({
-      message: `Error in updating products: `,
-      error,
+      message: "Error in updating products",
+      error: error.message,
     });
   }
 };
 
-module.exports = { productPagination, addProduct, getProducts, updateProducts };
+const updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteProduct = async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.status(204).json({
+      message: "Product delete Successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// Get a product by ID
+const getProductById = async (req, res) => {
+  try {
+    console.log(req.params);
+    const { id } = req.params;
+    const product = await Product.findOne({ id: parseInt(id) });
+    console.log(product);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+let cart = [];
+
+
+module.exports = {
+  productPagination,
+  addProduct,
+  getProducts,
+  updateProducts,
+  updateProduct,
+  deleteProduct,
+  getProductById,
+};
