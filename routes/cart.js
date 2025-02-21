@@ -18,7 +18,7 @@ router.post("/add", verifyToken, verifyRole(["user"]), add);
 
 router.delete("/:id", verifyToken, verifyRole(["user"]), delProduct);
 
-router.patch("/:id/decrease", verifyToken, verifyRole(["user"]), decPrdCount);
+router.patch("/decrease/:id", verifyToken, verifyRole(["user"]), decPrdCount);
 
 router.delete("/", verifyToken, verifyRole(["user"]), delCart);
 
