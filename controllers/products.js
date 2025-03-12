@@ -2,34 +2,59 @@ const Product = require("../models/products");
 
 const productPagination = async (req, res) => {
   try {
-    const productPerPage = req.query.productPerPage
-      ? parseInt(req.query.productPerPage)
-      : 5;
-    //PageNumber From which Page to Start
-    const pageNumber = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 5; // Default limit
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const skip = (page - 1) * limit;
+    const textSearch = req.query.key;
 
-    const skip = (pageNumber - 1) * pagination;
-    const products = await Product.find()
-      //skip takes argument to skip number of entries
-      .sort({ _id: 1 })
-      .skip(skip)
-      //limit is number of Records we want to display
-      .limit(pagination);
+    let pipeline = [];
+    let products = null;
+    let totalProducts = null;
+    let totalPages = null;
 
-    const totalProducts = await Product.countDocuments();
+    if (textSearch) {
+      pipeline.push({
+        $search: {
+          index: "default",
+          compound: {
+            should: [
+              { autocomplete: { query: textSearch, path: "name", tokenOrder: "sequential" } },
+              { autocomplete: { query: textSearch, path: "description", tokenOrder: "sequential" } },
+              { autocomplete: { query: textSearch, path: "category", tokenOrder: "sequential" } },
+            ],
+          },
+        },
+      });
+
+      // Get the total number of matched products (before pagination)
+      const searchResults = await Product.aggregate(pipeline);
+      totalProducts = searchResults.length;
+
+      // Apply pagination
+      pipeline.push({ $skip: skip }, { $limit: limit });
+      products = await Product.aggregate(pipeline);
+
+      totalPages = Math.ceil(totalProducts / limit);
+    } else {
+      // Sorting and pagination for non-search results
+      pipeline.push({ $sort: { _id: 1 } }, { $skip: skip }, { $limit: limit });
+
+      products = await Product.aggregate(pipeline);
+      totalProducts = await Product.countDocuments();
+      totalPages = Math.ceil(totalProducts / limit);
+    }
 
     return res.status(200).json({
-      product: products,
+      products,
       totalProducts,
-      currentPage: req.pagination.page,
-      totalPages: Math.ceil(totalProducts / limit),
+      page,
+      totalPages,
     });
   } catch (err) {
-    return res.status(500).send({
-      err: err,
-    });
+    return res.status(500).json({ error: err.message });
   }
 };
+
 
 const addProduct = async (req, res) => {
   try {
@@ -84,7 +109,7 @@ const getProducts = async (req, res) => {
 const updateProducts = async (req, res) => {
   try {
     // Use updateMany to remove the 'id' field from all products
-    const result = await Product.updateMany({}, { $unset: { quantity:0 } });
+    const result = await Product.updateMany({}, { $unset: { quantity: 0 } });
 
     console.log(`Updated ${result.modifiedCount} products.`);
     return res.status(200).json({
@@ -120,7 +145,6 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-
 // Get a product by ID
 const getProductById = async (req, res) => {
   try {
@@ -137,9 +161,6 @@ const getProductById = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-let cart = [];
-
 
 module.exports = {
   productPagination,

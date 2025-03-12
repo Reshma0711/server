@@ -8,16 +8,20 @@ const {
   deleteProduct,
   getProductById,
 } = require("../controllers/products");
+
 const router = express.Router();
+
 const { verifyToken } = require("../middlewares/authmiddleware");
 const { verifyRole } = require("../middlewares/rolemiddleware");
 
-router.get(
-  "/",
-  verifyToken,
-  verifyRole(["admin", "manager", "user"]),
-  getProducts
-);
+// router.get(
+//   "/",
+//   verifyToken,
+//   verifyRole(["admin", "manager", "user"]),
+//   getProducts
+// );
+
+router.get("/", getProducts);
 
 // router.post("/addProduct", addProduct);
 
@@ -25,7 +29,8 @@ router.get(
 // console.log("verifyRole type:", typeof verifyRole); // Should be 'function'
 
 // Create a new product (Only admin or manager)
-router.post("/add", verifyToken, verifyRole(["admin", "manager"]), addProduct);
+// router.post("/add", verifyToken, verifyRole(["admin", "manager"]), addProduct);
+// router.post("/add", addProduct);
 
 // Update a product (Only admin or manager)
 // router.put(
@@ -38,9 +43,15 @@ router.post("/add", verifyToken, verifyRole(["admin", "manager"]), addProduct);
 router.delete("/:id", verifyToken, verifyRole(["admin"]), deleteProduct);
 
 // Route to get a particular product by ID
-router.get("/:id", verifyToken, verifyRole(["admin", "manager","user"]), getProductById);
+router.get(
+  "/:id",
+  verifyToken,
+  verifyRole(["admin", "manager", "user"]),
+  getProductById
+);
 
 router.get("/productPagination", productPagination);
+
 router.put("/updateProducts", updateProducts);
 
 module.exports = router;

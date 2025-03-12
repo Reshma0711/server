@@ -11,6 +11,8 @@ const authRouter = require("./routes/user");
 const cors = require("cors");
 const roleRouter = require("./routes/role");
 const cartRouter = require("./routes/cart");
+const { productPagination } = require("./controllers/products");
+
 
 app.use(express.json());
 app.use(
@@ -22,6 +24,8 @@ app.use(
 );
 
 app.use("/products", productRouter);
+
+app.get("/pagination",productPagination)
 
 app.use("/", authRouter);
 

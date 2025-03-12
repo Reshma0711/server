@@ -19,7 +19,7 @@ exports.add = async (req, res) => {
   try {
     const { id } = req.user; // User ID from auth middleware
     const { productid, quantity } = req.body; // Product details from request body
-
+    console.log("bbbbbbbbbbbbbb", req.body);
     if (!mongoose.Types.ObjectId.isValid(productid)) {
       return res.status(400).json({
         message: "Invalid product ID format",
@@ -122,20 +122,21 @@ exports.decPrdCount = async (req, res) => {
     const userCart = await Cart.findOne({ userId: id });
     // console.log("userCart",userCart)
     // console.log(userCart.products)
-     userCart.products=userCart.products.map((item) => {
-      // console.log(typeof(item.productId))
-      // console.log(item.productId.toString())
-      // console.log(productId)
-      // console.log(item.productId.toString()===productId)
-      if (item.productId.toString() === productId) {
-        // console.log("quantity",item.quantity)
-        if(item.quantity)
-        item.quantity--;
+    userCart.products = userCart.products
+      .map((item) => {
+        // console.log(typeof(item.productId))
+        // console.log(item.productId.toString())
+        // console.log(productId)
+        // console.log(item.productId.toString()===productId)
+        if (item.productId.toString() === productId) {
+          // console.log("quantity",item.quantity)
+          if (item.quantity) item.quantity--;
 
-        //   console.log(item.quantity)
-      }
-      return item;
-    }).filter((item)=>item.quantity>=1);
+          //   console.log(item.quantity)
+        }
+        return item;
+      })
+      .filter((item) => item.quantity >= 1);
     await userCart.save();
     res.status(201).json({
       message: "Product quantity decreased",
